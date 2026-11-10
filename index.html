@@ -386,7 +386,16 @@ function verdict(content) {
   if ((m = first.match(/^LEARN:\s*([\w-]+)/i))) return { label: m[1], tone: 'neutral' };
   if (/^SHIPPET/i.test(first)) return { label: 'shipped', tone: 'good' };
   if (/^FEIL PÅ MAIN/i.test(first)) return { label: 'broke main', tone: 'critical' };
-  if (/^STOPPET/i.test(first)) return { label: 'stopped', tone: 'serious' };
+  if (/^STOPPET/i.test(first)) {
+    // say *why* it stopped: a gate doing its job (spec, human) reads differently from a broken one
+    if (/\bspec\b/i.test(first)) return { label: 'needs spec', tone: 'warn' };
+    if (/menneske|human/i.test(first)) return { label: 'needs human', tone: 'warn' };
+    if (/verify/i.test(first)) return { label: 'stopped at verify', tone: 'critical' };
+    if (/\bCI\b/.test(first)) return { label: 'CI failed', tone: 'critical' };
+    if (/review/i.test(first)) return { label: 'stopped at review', tone: 'serious' };
+    if (/check|sjekk/i.test(first)) return { label: 'stopped at check', tone: 'critical' };
+    return { label: 'stopped', tone: 'serious' };
+  }
   return { label: 'done', tone: 'neutral' };
 }
 const ICON = { good: '✓', warn: '?', serious: '!', critical: '✕', neutral: '•', running: '◠' };
